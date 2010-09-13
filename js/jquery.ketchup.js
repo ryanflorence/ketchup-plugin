@@ -148,21 +148,14 @@
   function buildParams(validation) {
     if(validation.indexOf('(') != -1) {
       var arr = validation.substring(validation.indexOf('(') + 1, validation.length - 1).split(',');
-      var tempStr = '';
+      var params = [undefined];
       
       for(var i = 0; i < arr.length; i++) {
-        var single = trim(arr[i]);
-        
-        if(parseInt(single)) {
-          tempStr += ','+single;
-        } else {
-          tempStr += ',"'+single+'"'
-        }
+        params.push(trim(arr[i]));
       }
-      
-      return tempStr;
+      return params;
     } else {
-      return '';
+      return [];
     }
   }
   
@@ -171,10 +164,8 @@
     var args = message.split('$arg').length - 1;
     
     if(args) {
-      var parArr = params.split(',');
-      
-      for(var i = 1; i < parArr.length; i++) {
-        message = message.replace('$arg'+i, parArr[i]);
+      for(var i = 1; i < params.length; i++) {
+        message = message.replace('$arg'+i, params[i]);
       }
     }
     
@@ -193,13 +184,13 @@
   function buildErrorList(validations, field) {
     var list = '';
     
+    if (field.attr('disabled')) return list;
     for(var i = 0; i < validations.length; i++) {
       var funcName = getFunctionName(validations[i]);
       var params = buildParams(validations[i]);
-      
-      if(!eval('$.fn.ketchup.validations["'+funcName+'"](field, field.val()'+params+')')) {
+      if(!$.fn.ketchup.validations[funcName](field, field.val(), Array.prototype.slice.call(params))) {
         list += '<li>'+formatMessage($.fn.ketchup.messages[funcName], params, field)+'</li>';
-      } 
+      }
     }
     
     return list;
